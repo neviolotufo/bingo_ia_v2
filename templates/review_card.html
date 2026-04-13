@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Revisar cartela{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h3 class="h5 mb-1">Revisão da cartela</h3>
+                        {% if card.player %}
+                            <div class="small text-muted">Jogador: {{ card.player.name }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <img src="{{ image_url }}" class="img-fluid rounded border" alt="Cartela">
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body p-4">
+                <h3 class="h5">Revisar OCR</h3>
+                <p class="text-muted">Corrija o nome da cartela e os números que vieram errados. Campos destacados em amarelo são suspeitos.</p>
+
+                <form method="post" id="reviewForm">
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Nome da cartela</label>
+                        <input
+                            type="text"
+                            name="card_name"
+                            class="form-control"
+                            value="{{ card.name }}"
+                            placeholder="Ex.: Cartela 701"
+                            required
+                        >
+                    </div>
+
+                    <table class="table table-bordered text-center align-middle review-table">
+                        <thead>
+                            <tr>
+                                <th>B</th>
+                                <th>I</th>
+                                <th>N</th>
+                                <th>G</th>
+                                <th>O</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for r in range(5) %}
+                            <tr>
+                            {% for c in range(5) %}
+                                <td>
+                                    {% if r == 2 and c == 2 %}
+                                        <div class="free-cell p-2 rounded fw-bold">Coringa</div>
+                                    {% else %}
+                                        {% set is_suspicious = {'row': r, 'col': c} in card.suspicious %}
+                                        <input
+                                            type="number"
+                                            class="form-control text-center review-input {% if is_suspicious %}input-suspicious{% endif %}"
+                                            name="cell_{{ r }}_{{ c }}"
+                                            value="{{ card.numbers[r][c] if card.numbers[r][c] != 0 else '' }}"
+                                            min="1"
+                                            max="75"
+                                            required
+                                            data-col="{{ c }}"
+                                        >
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-success">Salvar cartela</button>
+                        <a href="{{ url_for('game') }}" class="btn btn-secondary">Ir para o jogo</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/review.js') }}"></script>
+{% endblock %}

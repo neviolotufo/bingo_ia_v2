@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Jogadores{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body p-4">
+                <h3 class="h5 mb-3">Cadastrar jogador</h3>
+                <form method="post" action="{{ url_for('create_player') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <button class="btn btn-primary w-100">Salvar jogador</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body p-4">
+                <h3 class="h5 mb-3">Jogadores cadastrados</h3>
+                {% if players %}
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Cartelas</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in players %}
+                                    <tr>
+                                        <td>{{ p.name }}</td>
+                                        <td>{{ p.cards|length }}</td>
+                                        <td class="text-end">
+                                            <form method="post" action="{{ url_for('delete_player', player_id=p.id) }}">
+                                                <button class="btn btn-outline-danger btn-sm">Excluir</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-muted">Nenhum jogador cadastrado.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Cartelas - Bingo IA v2{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 rounded-4 mb-4">
+            <div class="card-body p-4">
+                <h3 class="h5 mb-3">Adicionar cartela por arquivo</h3>
+                <form method="post" action="{{ url_for('upload_card') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Nome da cartela</label>
+                        <input type="text" name="name" class="form-control" placeholder="Ex.: Cartela 01">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Jogador</label>
+                        <select name="player_id" class="form-select">
+                            <option value="">Sem jogador</option>
+                            {% for p in players %}
+                                <option value="{{ p.id }}">{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Imagem da cartela</label>
+                        <input type="file" name="image" class="form-control" accept="image/*" required>
+                    </div>
+                    <button class="btn btn-primary w-100">Ler cartela</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body p-4">
+                <h3 class="h5 mb-3">Capturar cartela pela câmera</h3>
+                <form method="post" action="{{ url_for('camera_card') }}" id="cameraForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nome da cartela</label>
+                        <input type="text" name="name" class="form-control" id="cameraCardName" placeholder="Ex.: Cartela câmera 01">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Jogador</label>
+                        <select name="player_id" class="form-select">
+                            <option value="">Sem jogador</option>
+                            {% for p in players %}
+                                <option value="{{ p.id }}">{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="camera-wrapper mb-3">
+                        <video id="cameraVideo" autoplay playsinline muted></video>
+                        <div class="camera-overlay">
+                            <div class="camera-guide">
+                                <div class="camera-guide-text">Enquadre toda a cartela dentro desta área</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <canvas id="cameraCanvas" class="d-none"></canvas>
+                    <input type="hidden" name="captured_image" id="capturedImage">
+
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary" id="startCameraBtn">Abrir câmera</button>
+                        <button type="button" class="btn btn-outline-secondary" id="switchCameraBtn">Trocar câmera</button>
+                        <button type="button" class="btn btn-warning" id="captureBtn">Capturar foto</button>
+
+                        <label for="mobileCameraInput" class="btn btn-info text-white">
+                            Abrir câmera do celular
+                        </label>
+                        <input
+                            type="file"
+                            id="mobileCameraInput"
+                            accept="image/*"
+                            capture="environment"
+                            class="d-none"
+                        >
+
+                        <button type="submit" class="btn btn-success">Enviar foto capturada</button>
+                    </div>
+
+                    <div class="form-text mt-3">
+                        No celular, se a câmera em tempo real não abrir, use <strong>Abrir câmera do celular</strong>.
+                    </div>
+
+                    <div class="mt-3">
+                        <img id="previewCapture" class="img-fluid rounded border d-none" alt="Prévia da captura">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <h3 class="h5 mb-0">Cartelas cadastradas</h3>
+                    <div class="small text-muted">
+                        Padrão atual: <strong>{{ state.current_pattern|upper }}</strong>
+                    </div>
+                </div>
+
+                {% if cards %}
+                    <div class="row g-3">
+                        {% for card in cards %}
+                            <div class="col-md-6 col-xl-4">
+                                <div class="card h-100 border-0 shadow-sm rounded-4 bingo-card-list">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                            <div>
+                                                <div class="fw-bold">{{ card.name }}</div>
+                                                {% if card.player %}
+                                                    <div class="small text-muted">Jogador: {{ card.player.name }}</div>
+                                                {% endif %}
+                                            </div>
+                                            {% if card.is_winner %}
+                                                <span class="badge text-bg-success">BINGO</span>
+                                            {% endif %}
+                                        </div>
+
+                                        <table class="table table-bordered table-sm text-center bingo-mini mb-3">
+                                            <tbody>
+                                            {% for r in range(5) %}
+                                                <tr>
+                                                    {% for c in range(5) %}
+                                                        {% if r == 2 and c == 2 %}
+                                                            <td class="free-cell">★</td>
+                                                        {% else %}
+                                                            {% set is_suspicious = {'row': r, 'col': c} in card.suspicious %}
+                                                            <td class="{% if is_suspicious %}cell-suspicious{% endif %}">{{ card.numbers[r][c] }}</td>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ url_for('review_card', card_id=card.id) }}" class="btn btn-outline-primary btn-sm w-100">Revisar</a>
+                                            <form method="post" action="{{ url_for('delete_card', card_id=card.id) }}" class="w-100">
+                                                <button class="btn btn-outline-danger btn-sm w-100">Excluir</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-muted">Nenhuma cartela cadastrada ainda.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+{% endblock %}

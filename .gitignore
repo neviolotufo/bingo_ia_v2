@@ -1,0 +1,30 @@
+# Ambiente virtual
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Cache
+cache/
+.pytest_cache/
+.mypy_cache/
+
+# Banco local
+instance/
+*.db
+*.sqlite3
+
+# Uploads
+uploads/
+
+# Env
+.env
+
+# VS Code
+.vscode/
+
+# Sistema
+.DS_Store
+Thumbs.db

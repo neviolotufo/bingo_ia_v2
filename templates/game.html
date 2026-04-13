@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Jogo - Bingo IA v2{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4 col-xl-3">
+        <div class="card shadow-sm border-0 rounded-4 sticky-top game-sidebar">
+            <div class="card-body p-4">
+                <h3 class="h5">Controle do jogo</h3>
+
+                <form method="post" action="{{ url_for('set_pattern') }}" class="mb-3">
+                    <label class="form-label">Padrão atual</label>
+                    <select name="pattern" class="form-select mb-2">
+                        <option value="quina" {% if state.current_pattern == 'quina' %}selected{% endif %}>Quina</option>
+                        <option value="l" {% if state.current_pattern == 'l' %}selected{% endif %}>L</option>
+                        <option value="v" {% if state.current_pattern == 'v' %}selected{% endif %}>V</option>
+                    </select>
+                    <button class="btn btn-primary w-100">Trocar padrão</button>
+                </form>
+
+                <form method="post" action="{{ url_for('new_game') }}" class="mb-4">
+                    <input type="hidden" name="pattern" value="{{ state.current_pattern }}">
+                    <button class="btn btn-outline-danger w-100">Novo jogo</button>
+                </form>
+
+                <div class="mb-3">
+                    <label class="form-label">Número sorteado</label>
+                    <div class="input-group">
+                        <input type="text" id="drawInput" class="form-control" placeholder="Ex.: 59 ou cinquenta e nove">
+                        <button class="btn btn-success" id="sendDrawBtn" type="button">Enviar</button>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 mb-3">
+                    <button class="btn btn-warning" id="voiceBtn" type="button">🎤 Falar número</button>
+                </div>
+
+                <div class="info-box mb-3">
+                    <div><strong>Padrão:</strong> <span id="patternLabel">{{ state.current_pattern|upper }}</span></div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="fw-semibold mb-2">Números sorteados</div>
+                    <div id="drawnNumbers" class="drawn-list">
+                        {% for n in state.drawn_numbers %}
+                            <span class="badge text-bg-dark me-1 mb-1">{{ n }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div id="statusBox" class="alert alert-secondary mb-0">
+                    Aguardando sorteio...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8 col-xl-9">
+        <div id="winnerPanel" class="mb-3"></div>
+
+        <div id="cardsContainer" class="row g-3">
+            {% for card in cards %}
+                <div class="col-md-6 col-xl-4">
+                    <div class="card shadow-sm border-0 rounded-4 bingo-card {% if card.is_winner %}winner{% endif %}" data-card-id="{{ card.id }}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
+                                <div>
+                                    <strong>{{ card.name }}</strong>
+                                    {% if card.player %}
+                                        <div class="small text-muted">Jogador: {{ card.player.name }}</div>
+                                    {% endif %}
+                                </div>
+                                <span class="badge {% if card.is_winner %}text-bg-success{% else %}text-bg-secondary{% endif %} winner-badge">
+                                    {% if card.is_winner %}BINGO{% else %}Em jogo{% endif %}
+                                </span>
+                            </div>
+
+                            <table class="table table-bordered text-center bingo-table mb-0">
+                                <tbody>
+                                    {% for r in range(5) %}
+                                        <tr>
+                                            {% for c in range(5) %}
+                                                {% if r == 2 and c == 2 %}
+                                                    <td class="marked free-cell">★</td>
+                                                {% else %}
+                                                    <td class="{% if card.marks[r][c] %}marked{% endif %}">
+                                                        {{ card.numbers[r][c] }}
+                                                    </td>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.initialState = {
+        pattern: "{{ state.current_pattern }}",
+        drawUrl: "{{ url_for('draw_number') }}"
+    };
+</script>
+<script src="{{ url_for('static', filename='js/game.js') }}"></script>
+{% endblock %}
