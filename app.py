@@ -25,7 +25,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 db.init_app(app)
-set_tesseract_cmd(app.config["TESSERACT_CMD"])
+set_tesseract_cmd()
 ensure_dirs(
     app.config["UPLOAD_FOLDER"],
     app.config["CACHE_FOLDER"],
