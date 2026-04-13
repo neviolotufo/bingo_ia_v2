@@ -12,8 +12,11 @@ from services.utils import file_sha1
 DEBUG = False
 
 
-def set_tesseract_cmd():
-    pytesseract.pytesseract.tesseract_cmd = os.getenv("TESSERACT_CMD", "tesseract")
+def set_tesseract_cmd(cmd=None):
+    import pytesseract
+    import os
+
+    pytesseract.pytesseract.tesseract_cmd = cmd or os.getenv("TESSERACT_CMD", "tesseract")
 
 
 def order_points(pts):
